@@ -1,7 +1,8 @@
-# simpleClock
+# SimpleClock
 
 ## 介绍
 一个简易时钟，使用vue3 + electron实现
+![screenshot](./pubilc/screenshot.png)
 
 ## 项目设置
 ```sh

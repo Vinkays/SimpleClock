@@ -42,7 +42,7 @@ export default {
       target: 'nsis',
       arch: ['x64']
     }],
-    icon: 'electron/icon.ico',
+    icon: 'electron/favicon.ico',
   },
   mac: {
     target: [
@@ -71,8 +71,8 @@ export default {
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
     shortcutName: '简易时钟',
-    installerIcon: 'electron/icon.ico',
-    uninstallerIcon: 'electron/icon.ico',
+    installerIcon: 'electron/favicon.ico',
+    uninstallerIcon: 'electron/favicon.ico',
     menuCategory: "SimpleClock",
     include: "electron/autoLaunch.nsh",
     language: "2052",

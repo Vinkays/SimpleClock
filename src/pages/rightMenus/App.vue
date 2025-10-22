@@ -94,11 +94,11 @@ onMounted(() => {
         border-radius: 4px;
         font-size: 0.8em;
         .menu-item {
-        padding: 4px 6px;
-        cursor: pointer;
-        &:hover {
-            background-color: #f5f5f5;
-        }
+            padding: 4px 6px;
+            cursor: pointer;
+            &:hover {
+                background-color: #f5f5f5;
+            }
         }
     }
 }
