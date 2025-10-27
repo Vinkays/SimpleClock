@@ -118,9 +118,9 @@ ipcMain.handle('add-new-window', (event, {name, position = undefined,size = [150
     delete mainObj.pagesWins[name]
   })
   if(mainObj.pagesWins[name]) {
-    return ({success: true});
+    return ({success: true, message: '窗口创建成功'});
   }
-  return ({success: false});
+  return ({success: false, message: '窗口创建失败'});
 })
 
 ipcMain.handle('remove-window', (event, {name}) => {

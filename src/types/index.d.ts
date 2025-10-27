@@ -32,7 +32,7 @@ interface ElectronAPI {
   // 获取存储的内容
   getStoreWindowStates: (keys?: string | string[]) => Promise<{success: boolean, data: any, message?: string}>,
   // 获取指定窗口的大小
-  getWinSize: () => Promise<{success: boolean, size: [number, number]}>,
+  getWinSize: (name: string = 'main') => Promise<{success: boolean, size: [number, number]}>,
   // 设置系统通知
   setNotification: (notice:{title?:string,subtitle?:string, body?:string,icon?:string, silent?:boolean, hasReply?:boolean, timeoutType?:string,replyPlaceholder?:string,sound?:string, actions?:any[],closeButtonText?:string,toastXml?:string}) => Promise<{success: boolean, message?: string, data?: any}>,
 }

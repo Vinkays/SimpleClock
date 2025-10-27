@@ -36,7 +36,7 @@ export default {
   asarUnpack: [],
   compression: "maximum",
   forceCodeSigning: false,
-  electronLanguages: ["en", "zh-CN", "zh-TW"],
+  electronLanguages: ["en", "zh-CN"],
   win: {
     target: [{
       target: 'nsis',
