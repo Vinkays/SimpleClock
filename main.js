@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve, join } from 'path';
 import initWinIpcMain from './electron/ipcMainExports.js'
 import SimpleStore from './electron/storage.js'
+import { getCurrentScreen, physicalToCss } from './electron/utils.js';
 
 // SimpleStore内部，为确保确保有写入权限，设置了用户数据目录，必须在app ready之前调用
 const store = new SimpleStore()
@@ -36,6 +37,25 @@ if (!gotTheLock) {
 
 // 创建窗口
 function createWindow (name, size, position) {
+  let pos = position ? {...position} : null
+  // 如果窗口位置和大小超出屏幕范围，则调整窗口位置
+  if(name!=='main' && position && size) {
+    const screen = getCurrentScreen(mainObj.mainWindow)
+    const { width, height, x, y } = screen.bounds    
+    const screeMinX = physicalToCss(x)
+    const screeMinY = physicalToCss(y)
+    const screeMaxX = physicalToCss(x + width)
+    const screeMaxY = physicalToCss(y + height)
+    const [w, h] = size
+    // 判断窗口横向是否超出屏幕范围
+    if(w + position.x > screeMaxX) {
+      pos.x = screeMaxX - w - 10
+    }
+    // 判断窗口纵向是否超出屏幕范围
+    if(h + position.y > screeMaxY) {
+      pos.y = screeMaxY - h - 10
+    }
+  }
   const win = new BrowserWindow({
     width: size[0],
     height: size[1],
@@ -43,7 +63,7 @@ function createWindow (name, size, position) {
     frame: false, // 隐藏窗口边框
     titleBarStyle: 'hidden', // 隐藏标题栏但保留窗口控制按钮
     autoHideMenuBar: false, // 隐藏菜单栏
-    ...position?{...position}:{},
+    ...pos?{...pos}:{},
     webPreferences: {
       zoomFactor: 1.0, // 设置默认缩放级别
       nodeIntegration: false, // 关闭 Node.js 集成

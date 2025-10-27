@@ -1,6 +1,6 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { app } from 'electron'
+import { app, screen } from 'electron'
 
 const execAsync = promisify(exec)
 
@@ -42,4 +42,37 @@ export async function removeAutoStartFromRegistry() {
   } catch (error) {
     return ({ success: false, message: error?.message })
   }
+}
+
+// 获取窗口所在的屏幕
+export function getCurrentScreen(window) {
+  // 获取窗口的边界矩形
+  const windowBounds = window.getBounds();
+  // 获取窗口中心的坐标点
+  const point = { x: windowBounds.x + windowBounds.width / 2, y: windowBounds.y+ windowBounds.height / 2 };
+  // 找到包含这个点的屏幕
+  const currentScreen = screen.getDisplayNearestPoint(point);
+  return currentScreen;
+}
+
+/**
+ * 物理像素转CSS像素
+ * @param {*} physicalPixels 物理像素
+ * @param {*} scaleFactor 缩放比例
+ * @returns {*} CSS像素
+ */
+export function physicalToCss(physicalPixels, scaleFactor=undefined) {
+  const scf = scaleFactor || screen.getPrimaryDisplay().scaleFactor;
+  return physicalPixels / scf;
+}
+
+/**
+ * css像素转物理像素
+ * @param {*} cssPixels css像素
+ * @param {*} scaleFactor 缩放比例 
+ * @returns {*} 物理像素
+ */
+export function cssToPhysical(cssPixels, scaleFactor=undefined) {
+  const scf = scaleFactor || screen.getPrimaryDisplay().scaleFactor;
+  return cssPixels * scf;
 }

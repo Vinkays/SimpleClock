@@ -1,10 +1,8 @@
 import { 
   ipcMain, 
   Notification,
-  nativeImage
  } from 'electron';
 import { checkAutoStartFromRegistry, addAutoStartToRegistry, removeAutoStartFromRegistry } from './utils.js'
-import fs from 'fs'
 
 // 窗口控制
 export default function initWinIpcMain(mainObj) {
