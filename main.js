@@ -42,8 +42,8 @@ function createWindow (name, size, position) {
   if(name!=='main' && position && size) {
     const screen = getCurrentScreen(mainObj.mainWindow)
     const { width, height, x, y } = screen.bounds    
-    const screeMinX = physicalToCss(x)
-    const screeMinY = physicalToCss(y)
+    // const screeMinX = physicalToCss(x)
+    // const screeMinY = physicalToCss(y)
     const screeMaxX = physicalToCss(x + width)
     const screeMaxY = physicalToCss(y + height)
     const [w, h] = size
@@ -88,7 +88,9 @@ function createWindow (name, size, position) {
 function createMainWindow () {
   const oldPosition = store.get('windowPosition');  
   const oldSize = store.get('windowSize') || [350, 100]; 
+  const isAlwaysOnTop = !!store.get('isAlwaysOnTop'); 
   const win = createWindow('main', oldSize, oldPosition)
+  win.setAlwaysOnTop(isAlwaysOnTop, isAlwaysOnTop?'screen-saver':'floating') // 设置窗口置顶
   win.on('close',()=>{
     const position = win.getPosition()
     const size = win.getSize()    
