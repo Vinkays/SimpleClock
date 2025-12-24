@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     vue(),
     viteClean({
-      targetFiles: ['dist', 'output']
+      targetFiles: ['dist', 'output'], // 需要清空的文件夹
     })
   ] as import('vite').Plugin[],
   server: {

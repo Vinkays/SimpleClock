@@ -73,20 +73,13 @@ export default function initWinIpcMain(mainObj) {
   // 窗口置顶
   ipcMain.handle('window-set-allways-on-top', async (event,{isTop, level = 'screen-saver'}) => {
     const { mainWindow, pagesWins, store } = mainObj;
-    if(mainWindow && isTop){
-      mainWindow.setAlwaysOnTop(true, level) // 窗口置顶
-      // 置顶状态，所有页面窗口也置顶，避免页面窗口被遮挡
-      Object.keys(pagesWins).forEach(key => {
-        pagesWins[key]?.setAlwaysOnTop(true, level)
-      })
-      store.set('isAlwaysOnTop', isTop)
-    } else {
-      mainWindow?.setAlwaysOnTop(false, 'floating') // 取消置顶
-      Object.keys(pagesWins).forEach(key => {
-        pagesWins[key]?.setAlwaysOnTop(false, 'floating')
-      })
-      store.set('isAlwaysOnTop', false)
-    }
+    const status = isTop ? level : 'floating'
+    mainWindow.setAlwaysOnTop(isTop, status) // 窗口置顶
+    // 置顶状态，所有页面窗口也置顶，避免页面窗口被遮挡
+    Object.keys(pagesWins).forEach(key => {
+      pagesWins[key]?.setAlwaysOnTop(isTop, status)
+    })
+    store.set('isAlwaysOnTop', isTop)
     return ({ success: true })
   })
   // 获取窗口置顶状态
