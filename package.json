@@ -1,6 +1,6 @@
 {
   "name": "SimpleClock",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "type": "module",
   "main": "main.js",
   "author": "Vinkay",
@@ -27,6 +27,7 @@
     "sass": "^1.93.2",
     "typescript": "~5.9.3",
     "vite": "^7.1.7",
+    "vite-plugin-clean": "^2.0.1",
     "vue": "^3.5.22",
     "vue-tsc": "^3.1.0"
   }

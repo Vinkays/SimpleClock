@@ -2,13 +2,19 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import viteClean from 'vite-plugin-clean'
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    viteClean({
+      targetFiles: ['dist', 'output']
+    })
+  ] as import('vite').Plugin[],
   server: {
     host: '0.0.0.0',
     port: 5120,
@@ -29,6 +35,7 @@ export default defineConfig({
         chunkFileNames: 'js/[name].js',
         assetFileNames: 'assets/[name].[ext]',
       },
+
     }
   },
   resolve: {
