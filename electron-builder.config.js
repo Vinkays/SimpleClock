@@ -25,7 +25,6 @@ export default async () => {
       "!.npmrc",
       "!.gitignore",
       "!package-lock.json",
-      "!package.json",
       "!pnpm-lock.yaml",
       "!public/**/*",
       "!pages/**/*",
@@ -84,6 +83,14 @@ export default async () => {
       language: "2052",
       installerLanguages: ["zh-CN"],
       warningsAsErrors: false,
-    }
+    },
+    // 自动更新发布配置示例（需要你在 GitHub Releases 或其他服务上托管安装包）
+    // publish: [
+    //   {
+    //     provider: 'github',
+    //     owner: 'your-github-name',
+    //     repo: 'SimpleClock',
+    //   },
+    // ],
   }
 }

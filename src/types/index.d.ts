@@ -20,7 +20,7 @@ interface ElectronAPI {
   // 设置窗口锁定状态
   setWinLocked: (isLocked: boolean) => Promise<{success: boolean}>,
   // 监听窗口锁定状态
-  onWinLocked: (callback: Function) => void,
+  onWinLocked: (callback: (isLocked: boolean) => void) => void,
   // 关闭应用
   quitApp: () => void,
   // 获取开机自启状态
@@ -35,6 +35,8 @@ interface ElectronAPI {
   getWinSize: (name: string = 'main') => Promise<{success: boolean, size: [number, number]}>,
   // 设置系统通知
   setNotification: (notice:{title?:string,subtitle?:string, body?:string,icon?:string, silent?:boolean, hasReply?:boolean, timeoutType?:string,replyPlaceholder?:string,sound?:string, actions?:any[],closeButtonText?:string,toastXml?:string}) => Promise<{success: boolean, message?: string, data?: any}>,
+  // 获取当前平台
+  getPlatform: () => Promise<{success: boolean, platform: string}>,
 }
 // 扩展 Window 接口
 declare global {
@@ -46,7 +48,7 @@ declare global {
 
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'
-  const component: DefineComponent<{}, {}, any>
+  const component: DefineComponent<null, null, any>
   export default component
 }
 

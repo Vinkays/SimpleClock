@@ -9,9 +9,13 @@
             <span v-if="!isAllwaysOnTop">置顶</span>
             <span v-else>移除置顶</span>
         </div>
-        <div class="menu-item" @click="setAutoLaunch">
-            <span v-if="!isAutoLaunch">设置开机自启动</span>
-            <span v-else>移除开机自启动</span>
+        <div
+          v-if="isWindows"
+          class="menu-item"
+          @click="setAutoLaunch"
+        >
+          <span v-if="!isAutoLaunch">设置开机自启动</span>
+          <span v-else>移除开机自启动</span>
         </div>
         <div class="menu-item" @click="quitApp">
             退出程序
@@ -25,6 +29,7 @@ import { ref, onMounted } from 'vue';
 const isLocked = ref(false);
 const isAllwaysOnTop = ref(false);
 const isAutoLaunch = ref(false);
+const isWindows = ref(false);
 
 // 切换锁定
 function toggleLock() {
@@ -70,14 +75,25 @@ function setAutoLaunch() {
     });
 }
 
-onMounted(() => {
+onMounted(async () => {
+    // 根据平台控制开机自启菜单，仅在 Windows 上展示
+    try {
+        const { success, platform } = await window.electronApi.getPlatform();
+        if (success) {
+            isWindows.value = platform === 'win32';
+        }
+    } catch {
+        isWindows.value = true;
+    }
     window.electronApi.getWinLocked().then(({isLocked: locked})=>{
         isLocked.value = locked;
     });
     window.electronApi.getAlwaysOnTop().then(({isTop})=>{
         isAllwaysOnTop.value = isTop;
     });
-    getAutoLaunch()
+    if (isWindows.value) {
+        getAutoLaunch();
+    }
 })
 </script>
 

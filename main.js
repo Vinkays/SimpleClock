@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { fileURLToPath } from 'url';
-import { dirname, resolve, join } from 'path';
+import { dirname, resolve } from 'path';
 import initWinIpcMain from './electron/ipcMainExports.js'
 import SimpleStore from './electron/storage.js'
 import { getCurrentScreen, physicalToCss } from './electron/utils.js';
@@ -136,6 +137,15 @@ ipcMain.handle('remove-window', (event, {name}) => {
 
 app.whenReady().then(() => {
   createMainWindow()
+  // 仅在生产环境启用自动更新检查
+  if (!isDev) {
+    try {
+      autoUpdater.checkForUpdatesAndNotify()
+    } catch (error) {
+      // 自动更新失败不影响主流程
+      console.error('autoUpdater error:', error)
+    }
+  }
 })
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

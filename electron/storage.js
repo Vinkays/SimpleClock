@@ -112,6 +112,8 @@ export default class SimpleStore {
   }
 
   has(key) {
-    return this.get(key) !== undefined;
+    const NOT_FOUND = Symbol('not_found');
+    // 使用一个唯一的占位符判断 key 是否真实存在，避免与真实值混淆
+    return this.get(key, NOT_FOUND) !== NOT_FOUND;
   }
 }

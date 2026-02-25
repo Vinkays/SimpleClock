@@ -110,7 +110,7 @@ export default function initWinIpcMain(mainObj) {
       const openAtLogin = await checkAutoStartFromRegistry()
       return ({ success: true, isAutoLaunch: openAtLogin });
     } catch (error) {
-      return ({ success: false, isAutoLaunch: false });
+      return ({ success: false, isAutoLaunch: false, message: error?.message });
     }
   })
   // 设置自动启动
@@ -169,10 +169,15 @@ export default function initWinIpcMain(mainObj) {
         notify.show();
         return ({ success: true, message: '成功' })
       } catch (error) {        
-        return ({ success: false, message: '当前环境不支持通知' })
+        return ({ success: false, message: '当前环境不支持通知', error: error?.message })
       }
     }
-    return ({ success: false, message: '当前环境不支持通知' })
+    return ({ success: false, message: '当前环境不支持通知', error: '当前环境不支持通知' })
+  })
+
+  // 获取当前运行平台
+  ipcMain.handle('window-get-platform', () => {
+    return ({ success: true, platform: process.platform })
   })
 }
 

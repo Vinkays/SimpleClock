@@ -32,6 +32,8 @@ let windowStartY = 0;
 const interval = 1000;
 
 async function onMouseDown(event: MouseEvent) {
+  // 锁定状态下不允许拖动，直接返回
+  if (isLocked.value) return;
   window.electronApi.removeWindow('rightMenus')
   startX = event.screenX; // 使用屏幕坐标
   startY = event.screenY;
@@ -48,7 +50,7 @@ async function onMouseDown(event: MouseEvent) {
   event.preventDefault();
 }
 
-let moveTimer: number | null = null;
+let moveTimer:  NodeJS.Timeout | null = null;
 async function onGlobalMouseMove(event: MouseEvent) {
   if (!isTracking) return;
   
@@ -63,7 +65,9 @@ async function onGlobalMouseMove(event: MouseEvent) {
   
   // 直接设置窗口位置
   await window.electronApi.setWindowPosition(newX, newY);
-  moveTimer && clearTimeout(moveTimer);
+  if(moveTimer) {
+    clearTimeout(moveTimer);
+  }
   moveTimer = setTimeout(async()=>{
     const windowPos = await window.electronApi.getWindowPosition();
     window.electronApi.setStoreWindowStates({
@@ -108,13 +112,15 @@ onMounted(()=>{
   scaleX.value = w / defaultW
   scaleY.value = h / defaultH  
 })
-let resizeTimer: number | null = null;
+let resizeTimer:  NodeJS.Timeout | null = null;
 window.addEventListener('resize', ()=>{
   const w = window.innerWidth
   const h = window.innerHeight
   scaleX.value = w / defaultW
   scaleY.value = h / defaultH
-  resizeTimer && clearTimeout(resizeTimer);
+  if(resizeTimer) {
+    clearTimeout(resizeTimer);
+  }
   resizeTimer = setTimeout(async()=>{
     const { size, success } = await window.electronApi.getWinSize()
     const windowPos = await window.electronApi.getWindowPosition();

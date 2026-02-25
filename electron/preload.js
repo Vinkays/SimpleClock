@@ -1,4 +1,4 @@
-const {contextBridge, ipcRenderer} = require('electron')
+import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('electronApi', {
   // 移动窗口
@@ -37,6 +37,11 @@ contextBridge.exposeInMainWorld('electronApi', {
   getStoreWindowStates: (keys) => ipcRenderer.invoke('window-get-store-states', keys),
   // 通知
   setNotification: (notice) => ipcRenderer.invoke('window-set-notification', notice),
+  // 当前平台
+  getPlatform: () => ipcRenderer.invoke('window-get-platform'),
 })
 
-process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+// 仅在开发环境下关闭 Electron 安全警告，生产环境保持默认行为
+if (process.env.NODE_ENV === 'development') {
+  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+}
