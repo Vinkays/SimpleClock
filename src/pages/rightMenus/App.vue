@@ -10,7 +10,7 @@
             <span v-else>移除置顶</span>
         </div>
         <div
-          v-if="isWindows"
+          v-if="isAutoLaunchSupported"
           class="menu-item"
           @click="setAutoLaunch"
         >
@@ -29,69 +29,71 @@ import { ref, onMounted } from 'vue';
 const isLocked = ref(false);
 const isAllwaysOnTop = ref(false);
 const isAutoLaunch = ref(false);
-const isWindows = ref(false);
+const isAutoLaunchSupported = ref(false);
 
 // 切换锁定
 function toggleLock() {
   isLocked.value = !isLocked.value;
-  window.electronApi.setWinLocked(isLocked.value);
+  window.electronApi.window.setWinLocked(isLocked.value);
 }
 
 // 切换置顶
 function toggleSetTop() {
   isAllwaysOnTop.value = !isAllwaysOnTop.value;
-  window.electronApi.setAlwaysOnTop(isAllwaysOnTop.value);
+  window.electronApi.window.setAlwaysOnTop(isAllwaysOnTop.value);
 }
 
 // 退出程序
 function quitApp() {
-  window.electronApi.quitApp();
+  window.electronApi.window.quitApp();
 }
 
 // 获取开机自启动状态
 function getAutoLaunch() {
-    window.electronApi.getAutoLaunch().then(({isAutoLaunch: autoLaunch})=>{
-        isAutoLaunch.value = autoLaunch
+    window.electronApi.autoLaunch.getAutoLaunch().then((res) => {
+        if (res.success && typeof res.isAutoLaunch === 'boolean') {
+            isAutoLaunch.value = res.isAutoLaunch;
+        }
     });
 }
 
 // 设置开机自启动
 function setAutoLaunch() {
     const autoLaunch = !isAutoLaunch.value;
-    window.electronApi.setAutoLaunch(autoLaunch).then(({success})=>{
-        window.electronApi.setNotification({
+    window.electronApi.autoLaunch.setAutoLaunch(autoLaunch).then((res) => {
+        const body = res.success
+            ? (autoLaunch ? '设置开机自启动成功' : '移除开机自启动成功')
+            : (res.message || '设置开机自启动失败');
+        window.electronApi.notification.setNotification({ title: '提示', body });
+    })
+    .catch((err: unknown) => {
+        window.electronApi.notification.setNotification({
             title: '提示',
-            body: success ? autoLaunch ? '设置开机自启动成功' : '移除开机自启动成功' : '设置开机自启动失败'
+            body: (err instanceof Error ? err.message : String(err)) || '设置开机自启动失败',
         });
     })
-    .catch((err: any)=>{        
-        window.electronApi.setNotification({
-            title: '提示',
-            body: err?.message || '设置开机自启动失败'
-        });
-    })
-    .finally(()=>{
-        getAutoLaunch()
+    .finally(() => {
+        getAutoLaunch();
     });
 }
 
 onMounted(async () => {
-    // 根据平台控制开机自启菜单，仅在 Windows 上展示
+    // 根据平台控制开机自启菜单（Windows / macOS / Linux 支持）
     try {
-        const { success, platform } = await window.electronApi.getPlatform();
+        const { success, platform } = await window.electronApi.app.getPlatform();
         if (success) {
-            isWindows.value = platform === 'win32';
+            isAutoLaunchSupported.value = ['win32', 'darwin', 'linux'].includes(platform);
         }
     } catch {
-        isWindows.value = true;
+        isAutoLaunchSupported.value = false;
     }
-    window.electronApi.getWinLocked().then(({isLocked: locked})=>{
-        isLocked.value = locked;
+    window.electronApi.window.getWinLocked().then((res) => {
+        if (res.success && typeof res.isLocked === 'boolean') isLocked.value = res.isLocked;
     });
-    window.electronApi.getAlwaysOnTop().then(({isTop})=>{
-        isAllwaysOnTop.value = isTop;
+    window.electronApi.window.getAlwaysOnTop().then((res) => {
+        if (res.success && typeof res.isTop === 'boolean') isAllwaysOnTop.value = res.isTop;
     });
-    if (isWindows.value) {
+    if (isAutoLaunchSupported.value) {
         getAutoLaunch();
     }
 })

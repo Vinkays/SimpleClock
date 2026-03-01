@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import initWinIpcMain from './electron/ipcMainExports.js'
+import initWinIpcMain from './electron/ipc/index.js'
 import SimpleStore from './electron/storage.js'
 import { getCurrentScreen, physicalToCss } from './electron/utils.js';
 
@@ -38,8 +38,9 @@ if (!gotTheLock) {
 
 // 创建窗口
 function createWindow (name, size, position) {
-  let pos = position ? {...position} : null
+  const pos = position ? {...position} : null
   // 如果窗口位置和大小超出屏幕范围，则调整窗口位置
+  const [w, h] = size || [150,150]
   if(name!=='main' && position && size) {
     const screen = getCurrentScreen(mainObj.mainWindow)
     const { width, height, x, y } = screen.bounds    
@@ -47,7 +48,6 @@ function createWindow (name, size, position) {
     // const screeMinY = physicalToCss(y)
     const screeMaxX = physicalToCss(x + width)
     const screeMaxY = physicalToCss(y + height)
-    const [w, h] = size
     // 判断窗口横向是否超出屏幕范围
     if(w + position.x > screeMaxX) {
       pos.x = screeMaxX - w - 10
@@ -58,8 +58,8 @@ function createWindow (name, size, position) {
     }
   }
   const win = new BrowserWindow({
-    width: size[0],
-    height: size[1],
+    width: w,
+    height: h,
     type: 'toolbar',  // 窗口类型
     frame: false, // 隐藏窗口边框
     titleBarStyle: 'hidden', // 隐藏标题栏但保留窗口控制按钮
@@ -102,38 +102,9 @@ function createMainWindow () {
   mainObj.mainWindow = win
   mainObj.pagesWins['main'] = win
 }
-initWinIpcMain(mainObj) // 初始化ipcMain
 
-// 创建新窗口
-ipcMain.handle('add-new-window', (event, {name, position = undefined,size = [150,150]}) => {
-  if(mainObj.pagesWins[name]) return ({success: false, message: '窗口已存在'}); // 如果窗口已经存在，则不创建新窗口
-  const win = createWindow(name, size, position)
-  win.on('closed', () => {
-    delete mainObj.pagesWins[name]
-  })
-  mainObj.pagesWins[name] = win
-  const isMainWinTop = mainObj.mainWindow.isAlwaysOnTop()
-  if(isMainWinTop) {
-    win.setAlwaysOnTop(true, 'screen-saver')
-  }
-  win.on('blur', () => {
-    win.close()
-    delete mainObj.pagesWins[name]
-  })
-  if(mainObj.pagesWins[name]) {
-    return ({success: true, message: '窗口创建成功'});
-  }
-  return ({success: false, message: '窗口创建失败'});
-})
-
-ipcMain.handle('remove-window', (event, {name}) => {
-  if(mainObj.pagesWins[name]){
-     mainObj.pagesWins[name].close()
-    delete mainObj.pagesWins[name]
-    return ({success: true});
-  }
-  return ({success: false})
-})
+mainObj.createWindow = createWindow
+initWinIpcMain(mainObj) // 初始化 IPC（含 add-new-window / remove-window）
 
 app.whenReady().then(() => {
   createMainWindow()

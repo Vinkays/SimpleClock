@@ -34,13 +34,13 @@ const interval = 1000;
 async function onMouseDown(event: MouseEvent) {
   // 锁定状态下不允许拖动，直接返回
   if (isLocked.value) return;
-  window.electronApi.removeWindow('rightMenus')
+  window.electronApi.window.removeWindow('rightMenus')
   startX = event.screenX; // 使用屏幕坐标
   startY = event.screenY;
   isTracking = true;
   
   // 获取窗口当前位置
-  const windowPos = await window.electronApi.getWindowPosition();
+  const windowPos = await window.electronApi.window.getWindowPosition();
   windowStartX = windowPos.x;
   windowStartY = windowPos.y;
   
@@ -64,13 +64,13 @@ async function onGlobalMouseMove(event: MouseEvent) {
   const newY = windowStartY + deltaY;
   
   // 直接设置窗口位置
-  await window.electronApi.setWindowPosition(newX, newY);
+  await window.electronApi.window.setWindowPosition(newX, newY);
   if(moveTimer) {
     clearTimeout(moveTimer);
   }
   moveTimer = setTimeout(async()=>{
-    const windowPos = await window.electronApi.getWindowPosition();
-    window.electronApi.setStoreWindowStates({
+    const windowPos = await window.electronApi.window.getWindowPosition();
+    window.electronApi.store.setStoreWindowStates({
       windowPosition: windowPos
     })
   }, interval)
@@ -99,11 +99,11 @@ onUnmounted(() => {
 
 function onRightMouseDown(event: MouseEvent) {
   event.preventDefault();
-  window.electronApi?.addNewWindow('rightMenus', {x: event.screenX, y: event.screenY})
+  window.electronApi?.window.addNewWindow('rightMenus', { x: event.screenX, y: event.screenY })
 }
 // 监听锁定状态
-window.electronApi.onWinLocked((locked: boolean)=>{
-  isLocked.value = locked;
+window.electronApi.window.onWinLocked((locked: boolean) => {
+  isLocked.value = locked
 })
 
 onMounted(()=>{
@@ -122,10 +122,10 @@ window.addEventListener('resize', ()=>{
     clearTimeout(resizeTimer);
   }
   resizeTimer = setTimeout(async()=>{
-    const { size, success } = await window.electronApi.getWinSize()
-    const windowPos = await window.electronApi.getWindowPosition();
-    if(success){
-      window.electronApi.setStoreWindowStates({
+    const { size, success } = await window.electronApi.window.getWinSize()
+    const windowPos = await window.electronApi.window.getWindowPosition()
+    if (success) {
+      window.electronApi.store.setStoreWindowStates({
         windowSize: size,
         windowPosition: windowPos
       })
