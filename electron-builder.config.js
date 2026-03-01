@@ -3,7 +3,7 @@ import fs from "fs";
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 
 export default async () => {
-  const { name, version, author,description } = pkg
+  const { name, version, author, description } = pkg
   return {
     appId: `com.${author}.${name}`,
     productName: name,
@@ -11,24 +11,26 @@ export default async () => {
     directories: {
       output: 'output'
     },
-    // 核心修复：调整 files 规则，确保 electron-store 及其依赖完整打包
+    // 核心修复：用 FileSet 显式复制 dist、electron，避免 glob 在 Windows/CI 下漏掉
     files: [
-      'dist/**/*',                // 保留 Vite 构建的前端资源（页面、JS、CSS 等）
-      'electron/**/*',            // 保留 Electron 主进程代码（main.js、preload.js 等
       'main.js',
-      // 排除不需要打包的文件
-      "!src",                   
-      "!.vscode",
-      "!README.md",
-      "!tsconfig.*",
-      "!vite.config.*",
-      "!.npmrc",
-      "!.gitignore",
-      "!package-lock.json",
-      "!pnpm-lock.yaml",
-      "!public/**/*",
-      "!pages/**/*",
-      "!electron-builder.config.js",
+      // 前端构建产物，主窗口 loadFile('dist/pages/main.html') 依赖
+      { from: 'dist', to: 'dist', filter: ['**/*'] },
+      // 主进程与 preload（ipc、utils、autoStart、storage 等）
+      { from: 'electron', to: 'electron', filter: ['**/*'] },
+      // 排除不需要打包的根目录内容
+      '!src',
+      '!.vscode',
+      '!README.md',
+      '!tsconfig.*',
+      '!vite.config.*',
+      '!.npmrc',
+      '!.gitignore',
+      '!package-lock.json',
+      '!pnpm-lock.yaml',
+      '!public/**/*',
+      '!pages/**/*',
+      '!electron-builder.config.js',
     ],
     executableName: name,
     extraMetadata: {
@@ -55,13 +57,13 @@ export default async () => {
           target: 'dmg',
           arch: ['arm64', 'x64', 'universal'],
         },
-        // 无论如何都要启用 zip，否则会影响 'dmg' 包中的自动更新
         {
           target: 'zip',
           arch: ['arm64', 'x64', 'universal'],
         },
       ],
     },
+    // Linux：AppImage 为单文件便携版，无需安装、可放任意路径运行；deb/rpm 为系统包，安装路径由包管理决定
     linux: {
       target: [
         {
@@ -70,6 +72,7 @@ export default async () => {
         },
       ],
     },
+    // Windows NSIS：已支持自定义安装路径（安装时可选择目录）
     nsis: {
       oneClick: false,
       allowToChangeInstallationDirectory: true,
