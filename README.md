@@ -5,6 +5,9 @@
 ![screenshot](./src/assets/screenshot.png)
 ![screenshot](./src/assets/s-screenshot.png)
 
+## release地址
+https://github.com/Vinkays/SimpleClock/releases
+
 ## 项目设置
 ```sh
 npm i
