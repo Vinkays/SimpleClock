@@ -90,7 +90,7 @@ export default async () => {
       {
         provider: 'github',
         owner: 'Vinkay',           // 改成你的 GitHub 用户名
-        repo: 'Timer',             // 改成你的仓库名（若仓库名是 SimpleClock 请改这里）
+        repo: 'SimpleClock',             // 改成你的仓库名（若仓库名是 SimpleClock 请改这里）
       },
     ],
   }
