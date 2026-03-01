@@ -15,17 +15,21 @@
 !macroend
 
 Function .onInstSuccess
-  ; 添加询问内容
+  ; 仅首次安装时询问开机自启动，更新版本时不再弹窗（通过注册表标记判断）
+  ReadRegStr $0 HKCU "Software\VinkayProjects\SimpleClock" "Installed"
+  StrCmp $0 "1" skipAutoLaunch
+  ; 首次安装：询问是否开机自启动
   MessageBox MB_YESNO|MB_ICONQUESTION \
     "是否设置开机自启动？$\n$\n\
       如果选择'是',应用将在开机时自启动。$\n\
       您后续可以在简易时钟（SimpleClock）的设置中编辑此功能" \
-  IDNO skipAutoLaunch
-    ; 添加自启动代码
+  IDNO skipWrite
     !insertMacro createAutoLaunch
     MessageBox MB_OK|MB_ICONINFORMATION \
      "自启动设置成功 $\n\
      您可以在简易时钟（SimpleClock）的设置中禁用此功能"
+  skipWrite:
+  WriteRegStr HKCU "Software\VinkayProjects\SimpleClock" "Installed" "1"
   skipAutoLaunch:
 FunctionEnd
 
