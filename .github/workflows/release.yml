@@ -9,6 +9,8 @@ on:
 jobs:
   release:
     runs-on: windows-latest
+    permissions:
+      contents: write   # 创建 Release、上传安装包和 latest.yml 必需
 
     steps:
       - name: Checkout
