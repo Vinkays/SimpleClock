@@ -30,6 +30,12 @@ interface WindowApi {
 interface AppApi {
   // 获取当前运行平台
   getPlatform: () => Promise<{ success: boolean; platform: string }>
+  // 是否有已下载待安装的更新
+  isUpdatePending: () => Promise<boolean>
+  // 立即退出并安装已下载的更新
+  quitAndInstall: () => Promise<void>
+  // 监听「有待安装更新」状态（用户点「稍后」后主进程会推送）
+  onUpdatePending: (callback: (value: boolean) => void) => void
 }
 
 interface AutoLaunchApi {

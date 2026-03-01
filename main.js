@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow, dialog, Notification } from 'electron';
 import electronAutoUpdater from 'electron-updater';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
@@ -14,8 +14,9 @@ const store = new SimpleStore()
 const isDev = process.env.NODE_ENV === 'development'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const APP_NAME = app.getName() || 'SimpleClock'
 // 设置应用ID（重要！）,通知中显示的应用名称
-app.setAppUserModelId(app.getName() || 'SimpleClock'); // 设置应用ID
+app.setAppUserModelId(APP_NAME); // 设置应用ID
 
 const mainObj = {
   mainWindow: null, // 主窗口
@@ -23,7 +24,11 @@ const mainObj = {
   pagesWins: {},
   app,
   store,
+  updatePending: false, // 新版本已下载、待用户选择重启安装
+  quitAndInstall: () => {}, // 在 whenReady 内赋值为 autoUpdater.quitAndInstall
 }
+
+let updateInterval = null
 
 // 检查是否已经有实例在运行
 const gotTheLock = app.requestSingleInstanceLock(); // 尝试获取锁，返回true表示当前实例是唯一实例,false表示当前实例不是唯一实例
@@ -113,41 +118,65 @@ app.whenReady().then(() => {
   createMainWindow()
 
   // 仅在生产环境启用自动更新（需在 electron-builder 中配置 publish 才有更新源）
+  // 更新仅替换应用目录，userData（SimpleStore 的 app-config.json）在 AppData 下，不会被清空
   if (!isDev) {
     autoUpdater.autoDownload = true
-    autoUpdater.autoInstallOnAppQuit = true
+    autoUpdater.autoInstallOnAppQuit = false // 仅用户点击「立即重启」或右键「版本更新」时安装，不退出即静默安装
+    mainObj.quitAndInstall = () => autoUpdater.quitAndInstall(false, true)
 
     autoUpdater.on('update-available', (info) => {
-      console.log('[autoUpdater] 发现新版本:', info.version)
+      if (Notification.isSupported()) {
+        new Notification({
+          title: `${APP_NAME} 发现新版本`,
+          body: `正在后台下载 v${info.version}，完成后将提示重启。`,
+        }).show()
+      }
     })
 
     autoUpdater.on('update-downloaded', () => {
-      // 不传父窗口（null），对话框作为独立窗口显示，避免主窗口过小时被裁切或显示不全
       dialog.showMessageBox(null, {
         type: 'info',
-        title: '更新就绪',
-        message: '新版本已下载完成，是否立即重启应用以完成更新？',
+        title: `${APP_NAME} 更新就绪`,
+        message: '新版本已下载完成，是否立即重启以完成更新？',
         buttons: ['立即重启', '稍后'],
         defaultId: 0,
         cancelId: 1,
       }).then(({ response }) => {
-        if (response === 0) autoUpdater.quitAndInstall(false, true)
-      })
+        if (response === 0) {
+          mainObj.quitAndInstall()
+        } else {
+          mainObj.updatePending = true
+          BrowserWindow.getAllWindows().forEach((w) => {
+            if (!w.isDestroyed() && w.webContents) w.webContents.send('app:update-pending', true)
+          })
+        }
+      }).catch(() => {})
     })
 
     autoUpdater.on('error', (err) => {
-      console.error('[autoUpdater] 检查更新失败:', err.message)
+      new Notification({
+        type: 'warning',
+        title: `${APP_NAME} 检查更新失败`,
+        body: `无法检查更新：${err.message}`,
+      }).show()
     })
 
-    try {
-      autoUpdater.checkForUpdatesAndNotify()
-    } catch (error) {
-      console.error('[autoUpdater] 启动检查失败:', error)
+    const doCheck = () => {
+      try {
+        autoUpdater.checkForUpdatesAndNotify()
+      } catch (error) {
+        console.error('[autoUpdater] 检查更新失败:', error)
+      }
     }
+    doCheck() // 启动时检查一次
+    if(updateInterval) clearInterval(updateInterval)
+    // 每 30 分钟再检查一次，避免长时间不关应用时收不到新版本推送
+    updateInterval = setInterval(doCheck, 30 * 60 * 1000)
   }
 })
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+  if(updateInterval) clearInterval(updateInterval)
 })

@@ -2,12 +2,10 @@ import { ipcMain } from 'electron'
 import { APP } from './channels.js'
 
 /**
- * 应用信息与平台相关 IPC
- * @param {object} _mainObj 未使用，保持与其他模块签名一致
+ * 应用信息、平台与更新相关 IPC
+ * @param {object} mainObj 主进程对象，含 updatePending、quitAndInstall
  */
-export function registerAppIpc(_mainObj) {
-  console.log('registerAppIpc_mainObj', _mainObj);
-  
+export function registerAppIpc(mainObj) {
   ipcMain.handle(APP.VERSION, () => {
     return process.env.npm_package_version ?? ''
   })
@@ -18,5 +16,13 @@ export function registerAppIpc(_mainObj) {
 
   ipcMain.handle(APP.PLATFORM, () => {
     return { success: true, platform: process.platform }
+  })
+
+  ipcMain.handle(APP.IS_UPDATE_PENDING, () => {
+    return mainObj.updatePending === true
+  })
+
+  ipcMain.handle(APP.QUIT_AND_INSTALL, () => {
+    if (typeof mainObj.quitAndInstall === 'function') mainObj.quitAndInstall()
   })
 }

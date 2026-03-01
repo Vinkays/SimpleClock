@@ -4,14 +4,15 @@
  * - 与 ipc/ 模块划分一致
  */
 
-// app 领域：应用信息与平台
+// app 领域：应用信息与平台、更新
 export const APP = {
-  // 获取应用版本
   VERSION: 'app:version',
-  // 获取应用名称
   NAME: 'app:name',
-  // 获取当前运行平台
   PLATFORM: 'app:platform',
+  // 是否有已下载待安装的更新（仅当用户点「稍后」时为 true）
+  IS_UPDATE_PENDING: 'app:is-update-pending',
+  // 立即退出并安装已下载的更新
+  QUIT_AND_INSTALL: 'app:quit-and-install',
 }
 
 // window 领域：窗口控制（主窗口与子窗口）

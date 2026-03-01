@@ -4,7 +4,13 @@
  */
 const { contextBridge, ipcRenderer } = require('electron')
 
-const APP = { VERSION: 'app:version', NAME: 'app:name', PLATFORM: 'app:platform' }
+const APP = {
+  VERSION: 'app:version',
+  NAME: 'app:name',
+  PLATFORM: 'app:platform',
+  IS_UPDATE_PENDING: 'app:is-update-pending',
+  QUIT_AND_INSTALL: 'app:quit-and-install',
+}
 const WINDOW = {
   MOVE: 'window:move',
   CENTER: 'window:center',
@@ -47,6 +53,9 @@ const windowApi = {
 
 const appApi = {
   getPlatform: () => ipcRenderer.invoke(APP.PLATFORM),
+  isUpdatePending: () => ipcRenderer.invoke(APP.IS_UPDATE_PENDING),
+  quitAndInstall: () => ipcRenderer.invoke(APP.QUIT_AND_INSTALL),
+  onUpdatePending: (callback) => ipcRenderer.on('app:update-pending', (_event, value) => callback(value)),
 }
 
 const autoLaunchApi = {

@@ -17,6 +17,13 @@
           <span v-if="!isAutoLaunch">设置开机自启动</span>
           <span v-else>移除开机自启动</span>
         </div>
+        <div
+          v-if="isUpdatePending"
+          class="menu-item"
+          @click="doQuitAndInstall"
+        >
+          版本更新
+        </div>
         <div class="menu-item" @click="quitApp">
             退出程序
         </div>
@@ -30,6 +37,7 @@ const isLocked = ref(false);
 const isAllwaysOnTop = ref(false);
 const isAutoLaunch = ref(false);
 const isAutoLaunchSupported = ref(false);
+const isUpdatePending = ref(false);
 
 // 切换锁定
 function toggleLock() {
@@ -46,6 +54,11 @@ function toggleSetTop() {
 // 退出程序
 function quitApp() {
   window.electronApi.window.quitApp();
+}
+
+// 立即重启以完成版本更新（仅在有待安装更新时显示菜单项）
+function doQuitAndInstall() {
+  window.electronApi.app.quitAndInstall?.();
 }
 
 // 获取开机自启动状态
@@ -96,6 +109,13 @@ onMounted(async () => {
     if (isAutoLaunchSupported.value) {
         getAutoLaunch();
     }
+    // 是否有已下载待安装的更新（显示「版本更新」菜单项）
+    window.electronApi.app.isUpdatePending?.().then((pending) => {
+        isUpdatePending.value = !!pending;
+    });
+    window.electronApi.app.onUpdatePending?.(() => {
+        isUpdatePending.value = true;
+    });
 })
 </script>
 

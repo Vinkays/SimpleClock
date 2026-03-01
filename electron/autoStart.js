@@ -6,8 +6,8 @@ import path from 'path'
 import os from 'os'
 
 const execAsync = promisify(exec)
-// 应用默认名称
-const APP_DEFAULT_NAME = 'SimpleClock'
+// 应用名称
+const APP_NAME = app.getName() || 'SimpleClock'
 
 /**
  * 检查自启动状态（仅 Windows 注册表）
@@ -15,7 +15,7 @@ const APP_DEFAULT_NAME = 'SimpleClock'
  */
 export async function checkAutoStartFromRegistry() {
   if (process.platform !== 'win32') return false
-  const name = app.getName() || APP_DEFAULT_NAME
+  const name = APP_NAME
   try {
     const { stdout } = await execAsync(
       `reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "${name}"`
@@ -34,7 +34,7 @@ export async function checkAutoStartFromRegistry() {
 function getLinuxAutostartDesktopPath() {
   const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
   const autostartDir = path.join(configDir, 'autostart')
-  const appName = (app.getName() || APP_DEFAULT_NAME).replace(/\s+/g, '')
+  const appName = (APP_NAME).replace(/\s+/g, '')
   return {
     autostartDir,
     desktopFilePath: path.join(autostartDir, `${appName}.desktop`),
@@ -60,7 +60,7 @@ async function addLinuxAutoStart() {
     if (!fs.existsSync(autostartDir)) {
       fs.mkdirSync(autostartDir, { recursive: true })
     }
-    const appName = app.getName() || APP_DEFAULT_NAME
+    const appName = APP_NAME
     const desktopContent = [
       '[Desktop Entry]',
       `Name=${appName}`,
@@ -146,7 +146,7 @@ export async function addAutoStartToRegistry() {
   }
   try {
     const exePath = app.getPath('exe')
-    const name = app.getName() || APP_DEFAULT_NAME
+    const name = APP_NAME
     await execAsync(
       `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "${name}" /t REG_SZ /d "${exePath}" /f`
     )
@@ -165,7 +165,7 @@ export async function removeAutoStartFromRegistry() {
     return { success: false, message: '当前平台不支持注册表自启动配置' }
   }
   try {
-    const name = app.getName() || APP_DEFAULT_NAME
+    const name = APP_NAME
     await execAsync(
       `reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "${name}" /f`
     )
