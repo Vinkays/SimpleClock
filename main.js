@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import electronAutoUpdater from 'electron-updater';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';

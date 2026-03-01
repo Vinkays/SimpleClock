@@ -7,6 +7,7 @@ import { AUTOLAUNCH } from './channels.js'
  * @param {object} _mainObj 未使用，保持与其他模块签名一致
  */
 export function registerAutoLaunchIpc(_mainObj) {
+  console.log('registerAutoLaunchIpc_mainObj', _mainObj);
   ipcMain.handle(AUTOLAUNCH.GET, async () => {
     try {
       const openAtLogin = await isAutoStartEnabled()

@@ -23,5 +23,13 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-explicit-any': 'off', // 允许使用 any 类型
     },
   },
+  // Electron preload 必须用 CommonJS require，在此放宽禁止 require 的规则
+  {
+    files: ['electron/preload.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+    },
+  },
 )
 

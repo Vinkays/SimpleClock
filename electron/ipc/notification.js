@@ -6,6 +6,7 @@ import { NOTIFICATION } from './channels.js'
  * @param {object} _mainObj 未使用，保持与其他模块签名一致
  */
 export function registerNotificationIpc(_mainObj) {
+  console.log('registerNotificationIpc_mainObj', _mainObj);
   ipcMain.handle(NOTIFICATION.SHOW, (_event, notice) => {
     if (Notification?.isSupported()) {
       try {

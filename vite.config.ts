@@ -35,8 +35,10 @@ export default defineConfig({
         chunkFileNames: 'js/[name].js',
         assetFileNames: 'assets/[name].[ext]',
       },
-
-    }
+    },
+  },
+  esbuild: {
+    drop: ['console', 'debugger']
   },
   resolve: {
     alias: {
