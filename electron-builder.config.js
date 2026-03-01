@@ -84,13 +84,14 @@ export default async () => {
       installerLanguages: ["zh-CN"],
       warningsAsErrors: false,
     },
-    // 自动更新发布配置示例（需要你在 GitHub Releases 或其他服务上托管安装包）
-    // publish: [
-    //   {
-    //     provider: 'github',
-    //     owner: 'your-github-name',
-    //     repo: 'SimpleClock',
-    //   },
-    // ],
+    // 自动更新：必须配置 publish，打包后的应用才会知道去哪里检查更新；未配置则 checkForUpdatesAndNotify 不会收到推送
+    // GitHub：在 Releases 页上传安装包与 latest.yml（由 electron-builder 打包时生成），公开仓库无需 token
+    publish: [
+      {
+        provider: 'github',
+        owner: 'Vinkay',           // 改成你的 GitHub 用户名
+        repo: 'Timer',             // 改成你的仓库名（若仓库名是 SimpleClock 请改这里）
+      },
+    ],
   }
 }

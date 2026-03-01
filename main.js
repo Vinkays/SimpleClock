@@ -1,10 +1,12 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import electronAutoUpdater from 'electron-updater';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import initWinIpcMain from './electron/ipc/index.js'
 import SimpleStore from './electron/storage.js'
 import { getCurrentScreen, physicalToCss } from './electron/utils.js';
+
+const { autoUpdater } = electronAutoUpdater;
 
 // SimpleStore内部，为确保确保有写入权限，设置了用户数据目录，必须在app ready之前调用
 const store = new SimpleStore()
@@ -14,6 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // 设置应用ID（重要！）,通知中显示的应用名称
 app.setAppUserModelId(app.getName() || 'SimpleClock'); // 设置应用ID
+
 const mainObj = {
   mainWindow: null, // 主窗口
   isLocked: false, // 是否锁定窗口
@@ -108,13 +111,38 @@ initWinIpcMain(mainObj) // 初始化 IPC（含 add-new-window / remove-window）
 
 app.whenReady().then(() => {
   createMainWindow()
-  // 仅在生产环境启用自动更新检查
+
+  // 仅在生产环境启用自动更新（需在 electron-builder 中配置 publish 才有更新源）
   if (!isDev) {
+    autoUpdater.autoDownload = true
+    autoUpdater.autoInstallOnAppQuit = true
+
+    autoUpdater.on('update-available', (info) => {
+      console.log('[autoUpdater] 发现新版本:', info.version)
+    })
+
+    autoUpdater.on('update-downloaded', () => {
+      // 不传父窗口（null），对话框作为独立窗口显示，避免主窗口过小时被裁切或显示不全
+      dialog.showMessageBox(null, {
+        type: 'info',
+        title: '更新就绪',
+        message: '新版本已下载完成，是否立即重启应用以完成更新？',
+        buttons: ['立即重启', '稍后'],
+        defaultId: 0,
+        cancelId: 1,
+      }).then(({ response }) => {
+        if (response === 0) autoUpdater.quitAndInstall(false, true)
+      })
+    })
+
+    autoUpdater.on('error', (err) => {
+      console.error('[autoUpdater] 检查更新失败:', err.message)
+    })
+
     try {
       autoUpdater.checkForUpdatesAndNotify()
     } catch (error) {
-      // 自动更新失败不影响主流程
-      console.error('autoUpdater error:', error)
+      console.error('[autoUpdater] 启动检查失败:', error)
     }
   }
 })

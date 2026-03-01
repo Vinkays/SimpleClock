@@ -6,6 +6,8 @@ import { APP } from './channels.js'
  * @param {object} _mainObj 未使用，保持与其他模块签名一致
  */
 export function registerAppIpc(_mainObj) {
+  console.log('APP',APP);
+  
   ipcMain.handle(APP.VERSION, () => {
     return process.env.npm_package_version ?? ''
   })

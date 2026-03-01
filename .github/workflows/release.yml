@@ -1,0 +1,33 @@
+# 推送 tag（如 v1.0.3）时自动打包并发布到 GitHub Releases，安装包与 latest.yml 由 electron-builder 自动上传
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # 例如：先改 package.json version，再 git tag v1.0.3 && git push origin v1.0.3
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build renderer
+        run: npm run build:render
+
+      # electron-builder 会根据 electron-builder.config.js 的 publish 配置，把 output 里的 exe + latest.yml 上传到当前 tag 的 Release
+      - name: Build and publish to GitHub Releases
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
