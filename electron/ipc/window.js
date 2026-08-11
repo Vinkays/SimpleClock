@@ -11,7 +11,12 @@ export function registerWindowIpc(mainObj) {
     if (isLocked) return { success: false, message: '锁定状态不允许移动' }
     if (mainWindow) {
       const [oldX, oldY] = mainWindow.getPosition()
+      const oldSize = mainWindow.getSize()
+      
       mainWindow.setPosition(oldX + x, oldY + y, animate)
+      const newPos = mainWindow.getPosition()
+      const newSize = mainWindow.getSize()
+      
       return { success: true, x, y }
     }
     return { success: false }
@@ -50,7 +55,28 @@ export function registerWindowIpc(mainObj) {
     const { mainWindow, isLocked } = mainObj
     if (isLocked) return { success: false, message: '锁定状态不允许移动' }
     if (mainWindow) {
-      mainWindow.setPosition(x, y)
+      const oldPos = mainWindow.getPosition()
+      const useSize = mainObj._movingStoredSize || mainWindow.getSize()
+      
+      mainWindow.setBounds({ x, y, width: useSize[0], height: useSize[1] }, false)
+      const afterSize = mainWindow.getSize()
+      if (afterSize[0] !== useSize[0] || afterSize[1] !== useSize[1]) {
+        
+        mainWindow.setSize(useSize[0], useSize[1])
+      }
+      // if a resize event is pending, ensure final size after a tick
+      setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const finalSize = mainWindow.getSize()
+          if (finalSize[0] !== useSize[0] || finalSize[1] !== useSize[1]) {
+            
+            mainWindow.setSize(useSize[0], useSize[1])
+          }
+        }
+      }, 20)
+      const newPos = mainWindow.getPosition()
+      const newSize = mainWindow.getSize()
+      
       return { success: true }
     }
     return { success: false }
@@ -121,5 +147,57 @@ export function registerWindowIpc(mainObj) {
       return { success: true }
     }
     return { success: false }
+  })
+
+  // Renderer notifies main that a manual move (drag) started
+  ipcMain.handle(WINDOW.BEGIN_MOVE, () => {
+    mainObj.isMoving = true
+    
+    try {
+      if (mainObj.mainWindow) {
+        const curSize = mainObj.mainWindow.getSize()
+        // store current size for restore later
+        mainObj._movingStoredSize = curSize
+        // lock min/max to current size to prevent OS-induced resize during move
+        mainObj.mainWindow.setMinimumSize(curSize[0], curSize[1])
+        mainObj.mainWindow.setMaximumSize(curSize[0], curSize[1])
+        
+      }
+    } catch (e) {
+      
+    }
+    return { success: true }
+  })
+
+  // Renderer notifies main that manual move ended
+  ipcMain.handle(WINDOW.END_MOVE, () => {
+    mainObj.isMoving = false
+    
+    try {
+      if (mainObj.mainWindow) {
+        // remove size lock
+        mainObj.mainWindow.setMinimumSize(0, 0)
+        mainObj.mainWindow.setMaximumSize(9999, 9999)
+      }
+    } catch (e) {
+      
+    }
+    return { success: true }
+  })
+
+  ipcMain.handle(WINDOW.BEGIN_WINDOW_DRAG, () => {
+    const { mainWindow, isLocked } = mainObj
+    if (isLocked) return { success: false, message: '锁定状态不允许拖拽' }
+    if (mainWindow) {
+      try {
+        mainWindow.beginWindowDrag()
+        
+        return { success: true }
+      } catch (error) {
+        
+        return { success: false, message: error?.message }
+      }
+    }
+    return { success: false, message: 'mainWindow not available' }
   })
 }

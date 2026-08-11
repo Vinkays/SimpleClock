@@ -43,6 +43,11 @@ export const WINDOW = {
   ADD: 'window:add',
   // 移除窗口
   REMOVE: 'window:remove',
+  // 开始/结束拖拽（用于主进程抑制 resize 恢复）
+  BEGIN_MOVE: 'window:begin-move',
+  END_MOVE: 'window:end-move',
+  // 原生开始窗口拖拽
+  BEGIN_WINDOW_DRAG: 'window:begin-window-drag',
 }
 // 主进程推送给渲染进程的事件名
 export const WINDOW_EVENT = {

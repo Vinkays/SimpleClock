@@ -25,6 +25,7 @@ const WINDOW = {
   QUIT: 'window:quit',
   ADD: 'window:add',
   REMOVE: 'window:remove',
+  BEGIN_WINDOW_DRAG: 'window:begin-window-drag',
 }
 const WINDOW_EVENT = { LOCKED: 'window:locked' }
 const AUTOLAUNCH = { GET: 'autoLaunch:get', SET: 'autoLaunch:set' }
@@ -49,6 +50,9 @@ const windowApi = {
     ipcRenderer.on(WINDOW_EVENT.LOCKED, (_event, isLocked) => callback(isLocked)),
   quitApp: () => ipcRenderer.invoke(WINDOW.QUIT),
   getWinSize: (name = 'main') => ipcRenderer.invoke(WINDOW.GET_SIZE, name),
+  beginMove: () => ipcRenderer.invoke('window:begin-move'),
+  endMove: () => ipcRenderer.invoke('window:end-move'),
+  beginWindowDrag: () => ipcRenderer.invoke(WINDOW.BEGIN_WINDOW_DRAG),
 }
 
 const appApi = {

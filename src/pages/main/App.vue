@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import { ref, onUnmounted, onMounted } from "vue";
+import { ref, onUnmounted, computed } from "vue";
+import {
+    removeWindow,
+    beginMove,
+    endMove,
+    getWindowPosition,
+    setWindowPosition,
+    getWinSize,
+    onWinLocked,
+    addNewWindow
+} from '@/utils/window';
+import { setStoreWindowStates } from '@/utils/store';
 
 // 时间显示逻辑
 const hour = ref('00');
 const minute = ref('00');
 const second = ref('00');
 const isLocked = ref(false);
+const windowSize = ref({ width: window.innerWidth, height: window.innerHeight });
+const baseWidth = 350
+const baseHeight = 100
+const interval = 1000;
+let resizeTimer: NodeJS.Timeout | null = null;
 
-// 窗口缩放逻辑
-const defaultW = 350;
-const defaultH = 100;
-const scaleX = ref(1);
-const scaleY = ref(1); 
+const timerStyle = computed(() => {
+  const scaleX = windowSize.value.width / baseWidth
+  const scaleY = windowSize.value.height / baseHeight
+  return {
+    transform: `scale(${scaleX}, ${scaleY})`,
+  }
+});
 
 function updateTime() {
   const date = new Date();
@@ -23,134 +41,136 @@ function updateTime() {
 updateTime();
 const timer = setInterval(updateTime, 1000);
 
-// 窗口拖动逻辑
-let startX = 0;
-let startY = 0;
-let isTracking = false;
-let windowStartX = 0;
-let windowStartY = 0;
-const interval = 1000;
+let isTracking = false
+let startX = 0
+let startY = 0
+let windowStartX = 0
+let windowStartY = 0
+const resizeEdgeThreshold = 4
+
+function isResizeHit(event: MouseEvent) {
+  const width = window.innerWidth
+  const height = window.innerHeight
+  return (
+    event.clientX <= resizeEdgeThreshold ||
+    event.clientX >= width - resizeEdgeThreshold ||
+    event.clientY <= resizeEdgeThreshold ||
+    event.clientY >= height - resizeEdgeThreshold
+  )
+}
 
 async function onMouseDown(event: MouseEvent) {
-  // 锁定状态下不允许拖动，直接返回
-  if (isLocked.value) return;
-  window.electronApi.window.removeWindow('rightMenus')
-  startX = event.screenX; // 使用屏幕坐标
-  startY = event.screenY;
-  isTracking = true;
-  
-  // 获取窗口当前位置
-  const windowPos = await window.electronApi.window.getWindowPosition();
-  windowStartX = windowPos.x;
-  windowStartY = windowPos.y;
-  
-  // 添加全局事件监听
-  document.addEventListener('mousemove', onGlobalMouseMove);
-  document.addEventListener('mouseup', onGlobalMouseUp);
-  event.preventDefault();
+  if (isLocked.value) return
+  if (isResizeHit(event)) return
+  removeWindow('rightMenus')
+  try {
+    await beginMove()
+  } catch (e) {}
+  isTracking = true
+  startX = event.screenX
+  startY = event.screenY
+  const windowPos = await getWindowPosition()
+  windowStartX = windowPos.x
+  windowStartY = windowPos.y
+
+  document.addEventListener('mousemove', onGlobalMouseMove)
+  document.addEventListener('mouseup', onGlobalMouseUp, true)
+  window.addEventListener('blur', onGlobalMouseUp)
+  event.preventDefault()
 }
 
-let moveTimer:  NodeJS.Timeout | null = null;
+function onWindowResize() {
+  windowSize.value = { width: window.innerWidth, height: window.innerHeight }
+  storeFinalWinPositionAndSize()
+}
+
 async function onGlobalMouseMove(event: MouseEvent) {
-  if (!isTracking) return;
-  
-  const currentX = event.screenX;
-  const currentY = event.screenY;
-  const deltaX = currentX - startX;
-  const deltaY = currentY - startY;
-  
-  // 计算新位置
-  const newX = windowStartX + deltaX;
-  const newY = windowStartY + deltaY;
-  
-  // 直接设置窗口位置
-  await window.electronApi.window.setWindowPosition(newX, newY);
-  if(moveTimer) {
-    clearTimeout(moveTimer);
-  }
-  moveTimer = setTimeout(async()=>{
-    const windowPos = await window.electronApi.window.getWindowPosition();
-    window.electronApi.store.setStoreWindowStates({
-      windowPosition: windowPos
-    })
-  }, interval)
+  if (!isTracking) return
+  const deltaX = event.screenX - startX
+  const deltaY = event.screenY - startY
+  await setWindowPosition(
+    Math.round(windowStartX + deltaX),
+    Math.round(windowStartY + deltaY)
+  )
 }
 
-// 鼠标抬起事件处理逻辑
 function onGlobalMouseUp() {
-  stopDragging();
+  stopDragging()
 }
 
-// 停止拖动逻辑
 function stopDragging() {
-  if (isTracking) {
-    isTracking = false;
-    document.removeEventListener('mousemove', onGlobalMouseMove);
-    document.removeEventListener('mouseup', onGlobalMouseUp);
-  }
+  if (!isTracking) return
+  isTracking = false
+  document.removeEventListener('mousemove', onGlobalMouseMove)
+  document.removeEventListener('mouseup', onGlobalMouseUp, true)
+  window.removeEventListener('blur', onGlobalMouseUp)
+  try {
+    endMove();
+    storeFinalWinPositionAndSize()
+  } catch (e) {}
 }
-
-// 组件卸载时清理
-onUnmounted(() => {
-  clearInterval(timer);
-  stopDragging();
-});
-
 
 function onRightMouseDown(event: MouseEvent) {
-  event.preventDefault();
-  window.electronApi?.window.addNewWindow('rightMenus', { x: event.screenX, y: event.screenY })
+  event.preventDefault()
+  event.stopPropagation()
+  removeWindow('rightMenus')
+  addNewWindow('rightMenus', { x: event.screenX, y: event.screenY })
 }
-// 监听锁定状态
-window.electronApi.window.onWinLocked((locked: boolean) => {
-  isLocked.value = locked
-})
 
-onMounted(()=>{
-  const w = window.innerWidth
-  const h = window.innerHeight
-  scaleX.value = w / defaultW
-  scaleY.value = h / defaultH  
-})
-let resizeTimer:  NodeJS.Timeout | null = null;
-window.addEventListener('resize', ()=>{
-  const w = window.innerWidth
-  const h = window.innerHeight
-  scaleX.value = w / defaultW
-  scaleY.value = h / defaultH
-  if(resizeTimer) {
-    clearTimeout(resizeTimer);
-  }
-  resizeTimer = setTimeout(async()=>{
-    const { size, success } = await window.electronApi.window.getWinSize()
-    const windowPos = await window.electronApi.window.getWindowPosition()
+// 窗口大小变化时，记录窗口最后大小和位置
+function storeFinalWinPositionAndSize() {
+  if(resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(async ()=>{
+    const { size, success } = await getWinSize()
+    const windowPos = await getWindowPosition()
     if (success) {
-      window.electronApi.store.setStoreWindowStates({
+      setStoreWindowStates({
         windowSize: size,
         windowPosition: windowPos
       })
     }
-  }, interval)
-})
+  }, interval) // 延迟触发，确保窗口大小已更新
+}
+// 组件卸载时清理
+onUnmounted(() => {
+  clearInterval(timer)
+  stopDragging()
+  window.removeEventListener('resize', onWindowResize)
+});
+
+// 监听锁定状态
+onWinLocked((locked: boolean) => {
+  isLocked.value = locked;
+});
+
+window.addEventListener('resize', onWindowResize)
 
 </script>
 
 <template>
-  <div 
-    :class="{timer: true, 'is-locked': isLocked}" 
-    :style="{transform: `scale(${scaleX},${scaleY})`}"
-    @mousedown.left="onMouseDown"
-    @mousedown.right="onRightMouseDown"
-  >
-    <div>{{ hour }}</div>
-    <div>:</div>
-    <div>{{ minute }}</div>
-    <div>:</div>
-    <div>{{ second }}</div>
+  <div class="timer-container" @mousedown.left="onMouseDown" @contextmenu.prevent="onRightMouseDown">
+    <div
+      :class="{timer: true, 'is-locked': isLocked}"
+      :style="timerStyle"
+    >
+      <div>{{ hour }}</div>
+      <div>:</div>
+      <div>{{ minute }}</div>
+      <div>:</div>
+      <div>{{ second }}</div>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+.timer-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .timer {
   width: 100%;
   height: 100%;
@@ -159,7 +179,9 @@ window.addEventListener('resize', ()=>{
   align-items: center;
   font-size: 80px;
   user-select: none;
-  background-color: rgba(128, 128, 128, 0.062);
+  // background-color: rgba(128, 128, 128, 0.062);
+  white-space: nowrap;
+  
   &:active {
     cursor: grabbing;
   }

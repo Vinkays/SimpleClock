@@ -25,6 +25,10 @@ interface WindowApi {
   quitApp: () => Promise<{ success: boolean }>
   // 获取指定窗口的大小
   getWinSize: (name?: string) => Promise<{ success: boolean; size: [number, number] }>
+  // 开始移动窗口
+  beginMove: () => Promise<{ success: boolean }>
+  // 结束移动窗口
+  endMove: () => Promise<{ success: boolean }>
 }
 
 interface AppApi {

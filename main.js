@@ -21,6 +21,7 @@ app.setAppUserModelId(APP_NAME); // 设置应用ID
 const mainObj = {
   mainWindow: null, // 主窗口
   isLocked: false, // 是否锁定窗口
+  isMoving: false,
   pagesWins: {},
   app,
   store,
@@ -51,11 +52,9 @@ function createWindow (name, size, position) {
   const [w, h] = size || [150,150]
   if(name!=='main' && position && size) {
     const screen = getCurrentScreen(mainObj.mainWindow)
-    const { width, height, x, y } = screen.bounds    
-    // const screeMinX = physicalToCss(x)
-    // const screeMinY = physicalToCss(y)
-    const screeMaxX = physicalToCss(x + width)
-    const screeMaxY = physicalToCss(y + height)
+    const { width, height, x, y } = screen.bounds
+    const screeMaxX = x + width
+    const screeMaxY = y + height
     // 判断窗口横向是否超出屏幕范围
     if(w + position.x > screeMaxX) {
       pos.x = screeMaxX - w - 10
@@ -64,14 +63,19 @@ function createWindow (name, size, position) {
     if(h + position.y > screeMaxY) {
       pos.y = screeMaxY - h - 10
     }
+    
   }
   const win = new BrowserWindow({
-    width: w,
-    height: h,
+    ...w?{ width: w }: {},
+    ...h?{ height: h }: {},
     type: 'toolbar',  // 窗口类型
     frame: false, // 隐藏窗口边框
     titleBarStyle: 'hidden', // 隐藏标题栏但保留窗口控制按钮
     autoHideMenuBar: false, // 隐藏菜单栏
+    // resizable: false, // 禁用窗口缩放，避免拖动时误触调整大小
+    // minimizable: false,
+    // maximizable: false,
+    movable: true,
     ...pos?{...pos}:{},
     webPreferences: {
       zoomFactor: 1.0, // 设置默认缩放级别
@@ -100,6 +104,39 @@ function createMainWindow () {
   const isAlwaysOnTop = !!store.get('isAlwaysOnTop'); 
   const win = createWindow('main', oldSize, oldPosition)
   win.setAlwaysOnTop(isAlwaysOnTop, isAlwaysOnTop?'screen-saver':'floating') // 设置窗口置顶
+  
+  // Support custom right-click menu even when the window area is draggable
+  // win.webContents.on('context-menu', (event, params) => {
+  //   event.preventDefault()
+  //   const currentRightMenu = mainObj.pagesWins?.rightMenus
+  //   if (currentRightMenu) {
+  //     currentRightMenu.close()
+  //     delete mainObj.pagesWins.rightMenus
+  //   }
+  //   const bounds = win.getBounds()
+  //   const menuPos = {
+  //     x: bounds.x + params.x,
+  //     y: bounds.y + params.y,
+  //   }
+  //   const menuWin = createWindow('rightMenus', [220, 220], menuPos)
+  //   menuWin.on('closed', () => {
+  //     delete mainObj.pagesWins.rightMenus
+  //   })
+  //   mainObj.pagesWins.rightMenus = menuWin
+  // })
+
+  // Protect against unexpected resize only during manual move
+  win.on('resize', () => {
+    const size = win.getSize()
+    if (mainObj.isMoving) {
+      if (mainObj._movingStoredSize && (size[0] !== mainObj._movingStoredSize[0] || size[1] !== mainObj._movingStoredSize[1])) {
+        try {
+          win.setSize(mainObj._movingStoredSize[0], mainObj._movingStoredSize[1])
+        } catch (e) {}
+      }
+    }
+  })
+
   win.on('close',()=>{
     const position = win.getPosition()
     const size = win.getSize()    
@@ -154,10 +191,11 @@ app.whenReady().then(() => {
     })
 
     autoUpdater.on('error', (err) => {
+      // 提醒用户检查更新失败，但不阻止应用使用
       new Notification({
         type: 'warning',
         title: `${APP_NAME} 检查更新失败`,
-        body: `无法检查更新：${err.message}`,
+        body: `无法检查更新：${err.message??'请检查网络连接或稍后再试'}`,
       }).show()
     })
 
@@ -165,13 +203,13 @@ app.whenReady().then(() => {
       try {
         autoUpdater.checkForUpdatesAndNotify()
       } catch (error) {
-        console.error('[autoUpdater] 检查更新失败:', error)
+        // console.error('[autoUpdater] 检查更新失败:', error)
       }
     }
     doCheck() // 启动时检查一次
     if(updateInterval) clearInterval(updateInterval)
-    // 每 30 分钟再检查一次，避免长时间不关应用时收不到新版本推送
-    updateInterval = setInterval(doCheck, 30 * 60 * 1000)
+    // 每 24 小时再检查一次，避免长时间不关应用时收不到新版本推送
+    updateInterval = setInterval(doCheck, 24 * 60 * 60 * 1000)
   }
 })
 app.on('window-all-closed', () => {
