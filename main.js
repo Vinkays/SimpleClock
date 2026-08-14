@@ -5,6 +5,7 @@ import { dirname, resolve } from 'path';
 import initWinIpcMain from './electron/ipc/index.js'
 import SimpleStore from './electron/storage.js'
 import { getCurrentScreen, physicalToCss } from './electron/utils.js';
+import { APP, EVENT } from './electron/ipc/channels.js'
 
 const { autoUpdater } = electronAutoUpdater;
 
@@ -18,16 +19,23 @@ const APP_NAME = app.getName() || 'SimpleClock'
 // 设置应用ID（重要！）,通知中显示的应用名称
 app.setAppUserModelId(APP_NAME); // 设置应用ID
 
-const mainObj = {
-  mainWindow: null, // 主窗口
-  isLocked: false, // 是否锁定窗口
-  isMoving: false,
-  pagesWins: {},
-  app,
-  store,
-  updatePending: false, // 新版本已下载、待用户选择重启安装
-  quitAndInstall: () => {}, // 在 whenReady 内赋值为 autoUpdater.quitAndInstall
-}
+const mainObj = (()=>{
+  const appearance = store.get('appearance') || {
+    bgColor: '#fff',
+    textColor: '#000', // 字体颜色
+  }
+  return {
+    mainWindow: null, // 主窗口
+    isLocked: false, // 是否锁定窗口
+    isMoving: false,
+    pagesWins: {},
+    app,
+    store,
+    appearance,
+    updatePending: false, // 新版本已下载、待用户选择重启安装
+    quitAndInstall: () => {}, // 在 whenReady 内赋值为 autoUpdater.quitAndInstall
+  }
+})()
 
 let updateInterval = null
 
@@ -69,6 +77,7 @@ function createWindow (name, size, position) {
     ...w?{ width: w }: {},
     ...h?{ height: h }: {},
     type: 'toolbar',  // 窗口类型
+    show: false, // 创建时隐藏窗口
     frame: false, // 隐藏窗口边框
     titleBarStyle: 'hidden', // 隐藏标题栏但保留窗口控制按钮
     autoHideMenuBar: false, // 隐藏菜单栏
@@ -87,6 +96,10 @@ function createWindow (name, size, position) {
       devTools: true,
       preload: resolve(__dirname, 'electron/preload.js'),
     },
+  })
+  // 页面第一次渲染成功后再显示窗口,避免白屏闪烁
+  win.once('ready-to-show', ()=>{
+    win.show()
   })
   if(isDev){
     win.loadURL(`http://localhost:5120/pages/${name}.html`)
@@ -184,7 +197,7 @@ app.whenReady().then(() => {
         } else {
           mainObj.updatePending = true
           BrowserWindow.getAllWindows().forEach((w) => {
-            if (!w.isDestroyed() && w.webContents) w.webContents.send('app:update-pending', true)
+            if (!w.isDestroyed() && w.webContents) w.webContents.send(EVENT.UPDATE_PENDING, true)
           })
         }
       }).catch(() => {})

@@ -1,6 +1,8 @@
 export const {
     quitAndInstall,
     isUpdatePending,
-    onUpdatePending,
-    getPlatform
+    getPlatform,
+    quitApp,
+    setAppearance,
+    getAppearance,
 } = window.electronApi.app

@@ -19,10 +19,6 @@ interface WindowApi {
   setWinLocked: (isLocked: boolean) => Promise<{ success: boolean }>
   // 获取窗口锁定状态
   getWinLocked: () => Promise<{ success: boolean; isLocked: boolean }>
-  // 监听窗口锁定状态
-  onWinLocked: (callback: (isLocked: boolean) => void) => void
-  // 退出应用
-  quitApp: () => Promise<{ success: boolean }>
   // 获取指定窗口的大小
   getWinSize: (name?: string) => Promise<{ success: boolean; size: [number, number] }>
   // 开始移动窗口
@@ -38,6 +34,19 @@ interface AppApi {
   isUpdatePending: () => Promise<boolean>
   // 立即退出并安装已下载的更新
   quitAndInstall: () => Promise<void>
+  // 退出应用
+  quitApp: () => Promise<{ success: boolean }>
+  // 设置应用外观
+  setAppearance: (appearance: {bgColor: string; textColor: string;}) => Promise<{ success: boolean }>
+  // 获取应用外观
+  getAppearance: () => Promise<{ success: boolean; appearance: {bgColor: string; textColor: string;}}>
+}
+
+interface EventApi {
+  // 监听外观变化事件
+  onAppearanceChanged: (callback: (value: {bgColor: string; textColor: string;}) => void) => void
+  // 监听窗口锁定状态变化事件
+  onWinLocked: (callback: (isLocked: boolean) => void) => void
   // 监听「有待安装更新」状态（用户点「稍后」后主进程会推送）
   onUpdatePending: (callback: (value: boolean) => void) => void
 }
@@ -78,7 +87,9 @@ interface ElectronAPI {
   // 持久化 store 相关 API
   store: StoreApi
   // 系统通知相关 API
-  notification: NotificationApi
+  notification: NotificationApi,
+  // 事件相关 API
+  event: EventApi
 }
 
 declare global {

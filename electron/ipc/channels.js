@@ -13,6 +13,12 @@ export const APP = {
   IS_UPDATE_PENDING: 'app:is-update-pending',
   // 立即退出并安装已下载的更新
   QUIT_AND_INSTALL: 'app:quit-and-install',
+  // 退出应用
+  QUIT_APP: 'app:quit',
+  // 外观设置
+  SET_APPEARANCE: 'app:set-appearance',
+  // 获取外观设置
+  GET_APPEARANCE: 'app:get-appearance',
 }
 
 // window 领域：窗口控制（主窗口与子窗口）
@@ -37,8 +43,6 @@ export const WINDOW = {
   SET_LOCKED: 'window:set-locked',
   // 获取窗口锁定状态
   GET_LOCKED: 'window:get-locked',
-  // 退出应用
-  QUIT: 'window:quit',
   // 新增窗口
   ADD: 'window:add',
   // 移除窗口
@@ -50,9 +54,13 @@ export const WINDOW = {
   BEGIN_WINDOW_DRAG: 'window:begin-window-drag',
 }
 // 主进程推送给渲染进程的事件名
-export const WINDOW_EVENT = {
+export const EVENT = {
   // 窗口锁定状态
-  LOCKED: 'window:locked',
+  LOCKED: 'event:locked',
+  // 外观变化
+  APPEARANCE_CHANGED: 'event:appearance-changed',
+  // 有待安装更新
+  UPDATE_PENDING: 'event:update-pending',
 }
 
 // autoLaunch 领域：开机自启动

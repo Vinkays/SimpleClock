@@ -10,6 +10,9 @@ const APP = {
   PLATFORM: 'app:platform',
   IS_UPDATE_PENDING: 'app:is-update-pending',
   QUIT_AND_INSTALL: 'app:quit-and-install',
+  QUIT_APP: 'app:quit',
+  SET_APPEARANCE: 'app:set-appearance',
+  GET_APPEARANCE: 'app:get-appearance',
 }
 const WINDOW = {
   MOVE: 'window:move',
@@ -22,12 +25,17 @@ const WINDOW = {
   GET_ALWAYS_ON_TOP: 'window:get-always-on-top',
   SET_LOCKED: 'window:set-locked',
   GET_LOCKED: 'window:get-locked',
-  QUIT: 'window:quit',
   ADD: 'window:add',
   REMOVE: 'window:remove',
   BEGIN_WINDOW_DRAG: 'window:begin-window-drag',
+  BEGIN_MOVE: 'window:begin-move',
+  END_MOVE: 'window:end-move',
 }
-const WINDOW_EVENT = { LOCKED: 'window:locked' }
+const EVENT = { 
+  LOCKED: 'event:locked',
+  APPEARANCE_CHANGED: 'event:appearance-changed',
+  UPDATE_PENDING: 'event:update-pending',
+ }
 const AUTOLAUNCH = { GET: 'autoLaunch:get', SET: 'autoLaunch:set' }
 const STORE = { GET: 'store:get', SET: 'store:set' }
 const NOTIFICATION = { SHOW: 'notification:show' }
@@ -46,12 +54,9 @@ const windowApi = {
   removeWindow: (name) => ipcRenderer.invoke(WINDOW.REMOVE, { name }),
   setWinLocked: (isLocked) => ipcRenderer.invoke(WINDOW.SET_LOCKED, { isLocked }),
   getWinLocked: () => ipcRenderer.invoke(WINDOW.GET_LOCKED),
-  onWinLocked: (callback) =>
-    ipcRenderer.on(WINDOW_EVENT.LOCKED, (_event, isLocked) => callback(isLocked)),
-  quitApp: () => ipcRenderer.invoke(WINDOW.QUIT),
   getWinSize: (name = 'main') => ipcRenderer.invoke(WINDOW.GET_SIZE, name),
-  beginMove: () => ipcRenderer.invoke('window:begin-move'),
-  endMove: () => ipcRenderer.invoke('window:end-move'),
+  beginMove: () => ipcRenderer.invoke(WINDOW.BEGIN_MOVE),
+  endMove: () => ipcRenderer.invoke(WINDOW.END_MOVE),
   beginWindowDrag: () => ipcRenderer.invoke(WINDOW.BEGIN_WINDOW_DRAG),
 }
 
@@ -59,7 +64,15 @@ const appApi = {
   getPlatform: () => ipcRenderer.invoke(APP.PLATFORM),
   isUpdatePending: () => ipcRenderer.invoke(APP.IS_UPDATE_PENDING),
   quitAndInstall: () => ipcRenderer.invoke(APP.QUIT_AND_INSTALL),
-  onUpdatePending: (callback) => ipcRenderer.on('app:update-pending', (_event, value) => callback(value)),
+  quitApp: () => ipcRenderer.invoke(APP.QUIT_APP),
+  setAppearance: (appearance) => ipcRenderer.invoke(APP.SET_APPEARANCE, appearance),
+  getAppearance: () => ipcRenderer.invoke(APP.GET_APPEARANCE),
+}
+
+const eventApi = {
+  onAppearanceChanged: (callback) => ipcRenderer.on(EVENT.APPEARANCE_CHANGED, (_event, value) => callback(value)),
+  onWinLocked: (callback) => ipcRenderer.on(EVENT.LOCKED, (_event, isLocked) => callback(isLocked)),
+  onUpdatePending: (callback) => ipcRenderer.on(EVENT.UPDATE_PENDING, (_event, value) => callback(value)),
 }
 
 const autoLaunchApi = {
@@ -82,6 +95,7 @@ contextBridge.exposeInMainWorld('electronApi', {
   autoLaunch: autoLaunchApi,
   store: storeApi,
   notification: notificationApi,
+  event: eventApi,
 })
 
 if (process.env.NODE_ENV === 'development') {

@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { ref, onUnmounted, computed } from "vue";
 import {
-    removeWindow,
-    beginMove,
-    endMove,
-    getWindowPosition,
-    setWindowPosition,
-    getWinSize,
-    onWinLocked,
-    addNewWindow
+  removeWindow,
+  beginMove,
+  endMove,
+  getWindowPosition,
+  setWindowPosition,
+  getWinSize,
+  addNewWindow
 } from '@/utils/window';
 import { setStoreWindowStates } from '@/utils/store';
+import { onWinLocked, onAppearanceChanged } from '@/utils/event'
+import { getAppearance } from '@/utils/app'
 
 // 时间显示逻辑
 const hour = ref('00');
@@ -22,6 +23,8 @@ const baseWidth = 350
 const baseHeight = 100
 const interval = 1000;
 let resizeTimer: NodeJS.Timeout | null = null;
+const bgColor = ref('#fff');
+const color = ref('black');
 
 const timerStyle = computed(() => {
   const scaleX = windowSize.value.width / baseWidth
@@ -47,6 +50,15 @@ let startY = 0
 let windowStartX = 0
 let windowStartY = 0
 const resizeEdgeThreshold = 4
+
+getAppearance().then(({appearance}) => {
+  bgColor.value = appearance.bgColor || '#fff';
+  color.value = appearance.textColor || 'red';
+});
+onAppearanceChanged((appearance) => {
+    bgColor.value = appearance.bgColor;
+    color.value = appearance.textColor;
+});
 
 function isResizeHit(event: MouseEvent) {
   const width = window.innerWidth
@@ -102,8 +114,8 @@ function stopDragging() {
   if (!isTracking) return
   isTracking = false
   document.removeEventListener('mousemove', onGlobalMouseMove)
-  document.removeEventListener('mouseup', onGlobalMouseUp, true)
-  window.removeEventListener('blur', onGlobalMouseUp)
+  // document.removeEventListener('mouseup', onGlobalMouseUp, true)
+  // window.removeEventListener('blur', onGlobalMouseUp)
   try {
     endMove();
     storeFinalWinPositionAndSize()
@@ -148,10 +160,12 @@ window.addEventListener('resize', onWindowResize)
 </script>
 
 <template>
-  <div class="timer-container" @mousedown.left="onMouseDown" @contextmenu.prevent="onRightMouseDown">
+  <div class="timer-container"
+  :style="{'--color':color, '--bg-color': bgColor}"
+   @mousedown.left="onMouseDown" @contextmenu.prevent="onRightMouseDown">
     <div
       :class="{timer: true, 'is-locked': isLocked}"
-      :style="timerStyle"
+      :style="{...timerStyle}"
     >
       <div>{{ hour }}</div>
       <div>:</div>
@@ -169,6 +183,7 @@ window.addEventListener('resize', onWindowResize)
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: var(--bg-color);
 }
 
 .timer {
@@ -181,7 +196,7 @@ window.addEventListener('resize', onWindowResize)
   user-select: none;
   // background-color: rgba(128, 128, 128, 0.062);
   white-space: nowrap;
-  
+  color: var(--color);
   &:active {
     cursor: grabbing;
   }

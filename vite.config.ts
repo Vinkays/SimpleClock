@@ -4,12 +4,10 @@ import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import viteClean from 'vite-plugin-clean'
 
-
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig(({mode})=>{
-  console.log('mode:', mode)
   return ({
     plugins: [
       vue(),

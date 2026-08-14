@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { WINDOW, WINDOW_EVENT } from './channels.js'
+import { WINDOW, EVENT } from './channels.js'
 
 /**
  * 窗口控制相关 IPC（主窗口与子窗口）
@@ -101,17 +101,12 @@ export function registerWindowIpc(mainObj) {
   ipcMain.handle(WINDOW.SET_LOCKED, async (_event, { isLocked = false }) => {
     mainObj.isLocked = isLocked
     mainObj.mainWindow.setResizable(!isLocked)
-    mainObj.mainWindow.webContents.send(WINDOW_EVENT.LOCKED, isLocked)
+    mainObj.mainWindow.webContents.send(EVENT.LOCKED, isLocked)
     return { success: true }
   })
 
   ipcMain.handle(WINDOW.GET_LOCKED, async () => {
     return { success: true, isLocked: mainObj.isLocked }
-  })
-
-  ipcMain.handle(WINDOW.QUIT, async () => {
-    mainObj.app.quit()
-    return { success: true }
   })
 
   ipcMain.handle(WINDOW.GET_SIZE, (_event, name) => {
