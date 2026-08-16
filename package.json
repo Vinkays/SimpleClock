@@ -19,7 +19,12 @@
     "type-check": "vue-tsc --noEmit",
     "test": "vitest",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky",
+    "lint:staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,vue}": "eslint --max-warnings=0"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",
@@ -40,6 +45,8 @@
     "vue-tsc": "^3.1.0",
     "eslint": "^10.0.1",
     "eslint-plugin-vue": "^10.2.0",
-    "@vue/eslint-config-typescript": "^14.6.0"
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.0.0"
   }
 }

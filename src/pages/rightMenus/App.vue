@@ -149,13 +149,11 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .rightMenus {
-    --test: #f2c0c0;
-    position: absolute;
     width:100%;
+    height: 100%;
     display: flex;
     justify-items: center;
     align-items: center;
-    height: 100%;
     background-color: var(--bg-color);
     color: var(--color);
     .menu {

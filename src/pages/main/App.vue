@@ -77,7 +77,7 @@ async function onMouseDown(event: MouseEvent) {
   removeWindow('rightMenus')
   try {
     await beginMove()
-  } catch (e) {}
+  } catch {}
   isTracking = true
   startX = event.screenX
   startY = event.screenY
@@ -119,7 +119,7 @@ function stopDragging() {
   try {
     endMove();
     storeFinalWinPositionAndSize()
-  } catch (e) {}
+  } catch {}
 }
 
 function onRightMouseDown(event: MouseEvent) {
@@ -184,19 +184,16 @@ window.addEventListener('resize', onWindowResize)
   justify-content: center;
   align-items: center;
   background-color: var(--bg-color);
+  color: var(--color);
 }
 
 .timer {
-  width: 100%;
-  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 80px;
   user-select: none;
-  // background-color: rgba(128, 128, 128, 0.062);
   white-space: nowrap;
-  color: var(--color);
   &:active {
     cursor: grabbing;
   }

@@ -21,6 +21,13 @@ export default defineConfigWithVueTs(
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       '@typescript-eslint/no-explicit-any': 'off', // 允许使用 any 类型
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
     },
   },
   // Electron preload 必须用 CommonJS require，在此放宽禁止 require 的规则

@@ -11,12 +11,7 @@ export function registerWindowIpc(mainObj) {
     if (isLocked) return { success: false, message: '锁定状态不允许移动' }
     if (mainWindow) {
       const [oldX, oldY] = mainWindow.getPosition()
-      const oldSize = mainWindow.getSize()
-      
       mainWindow.setPosition(oldX + x, oldY + y, animate)
-      const newPos = mainWindow.getPosition()
-      const newSize = mainWindow.getSize()
-      
       return { success: true, x, y }
     }
     return { success: false }
@@ -55,13 +50,11 @@ export function registerWindowIpc(mainObj) {
     const { mainWindow, isLocked } = mainObj
     if (isLocked) return { success: false, message: '锁定状态不允许移动' }
     if (mainWindow) {
-      const oldPos = mainWindow.getPosition()
       const useSize = mainObj._movingStoredSize || mainWindow.getSize()
       
       mainWindow.setBounds({ x, y, width: useSize[0], height: useSize[1] }, false)
       const afterSize = mainWindow.getSize()
       if (afterSize[0] !== useSize[0] || afterSize[1] !== useSize[1]) {
-        
         mainWindow.setSize(useSize[0], useSize[1])
       }
       // if a resize event is pending, ensure final size after a tick
@@ -69,13 +62,10 @@ export function registerWindowIpc(mainObj) {
         if (mainWindow && !mainWindow.isDestroyed()) {
           const finalSize = mainWindow.getSize()
           if (finalSize[0] !== useSize[0] || finalSize[1] !== useSize[1]) {
-            
             mainWindow.setSize(useSize[0], useSize[1])
           }
         }
       }, 20)
-      const newPos = mainWindow.getPosition()
-      const newSize = mainWindow.getSize()
       
       return { success: true }
     }
@@ -156,10 +146,8 @@ export function registerWindowIpc(mainObj) {
         // lock min/max to current size to prevent OS-induced resize during move
         mainObj.mainWindow.setMinimumSize(curSize[0], curSize[1])
         mainObj.mainWindow.setMaximumSize(curSize[0], curSize[1])
-        
       }
-    } catch (e) {
-      
+    } catch {
     }
     return { success: true }
   })
@@ -174,8 +162,7 @@ export function registerWindowIpc(mainObj) {
         mainObj.mainWindow.setMinimumSize(0, 0)
         mainObj.mainWindow.setMaximumSize(9999, 9999)
       }
-    } catch (e) {
-      
+    } catch {
     }
     return { success: true }
   })

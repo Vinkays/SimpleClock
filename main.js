@@ -4,8 +4,8 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import initWinIpcMain from './electron/ipc/index.js'
 import SimpleStore from './electron/storage.js'
-import { getCurrentScreen, physicalToCss } from './electron/utils.js';
-import { APP, EVENT } from './electron/ipc/channels.js'
+import { getCurrentScreen } from './electron/utils.js';
+import { EVENT } from './electron/ipc/channels.js'
 
 const { autoUpdater } = electronAutoUpdater;
 
@@ -145,7 +145,7 @@ function createMainWindow () {
       if (mainObj._movingStoredSize && (size[0] !== mainObj._movingStoredSize[0] || size[1] !== mainObj._movingStoredSize[1])) {
         try {
           win.setSize(mainObj._movingStoredSize[0], mainObj._movingStoredSize[1])
-        } catch (e) {}
+        } catch {}
       }
     }
   })
@@ -215,7 +215,7 @@ app.whenReady().then(() => {
     const doCheck = () => {
       try {
         autoUpdater.checkForUpdatesAndNotify()
-      } catch (error) {
+      } catch {
         // console.error('[autoUpdater] 检查更新失败:', error)
       }
     }
