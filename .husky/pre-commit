@@ -1,1 +1,17 @@
+#!/usr/bin/env sh
+
+echo "🔍 Running linter for staged files..."
 npx lint-staged
+if [ $? -ne 0 ]; then
+  echo "❌ Lint check failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ Lint passed. Now running tests..."
+npm test -- --run
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed. Ready to commit!"
