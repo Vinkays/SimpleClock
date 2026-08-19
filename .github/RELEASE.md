@@ -16,7 +16,7 @@
    git tag v1.0.3
    git push origin v1.0.3
    ```
-3. 打开仓库 **Actions** 页，会看到 `Release` 工作流在跑。
+3. 打开仓库 **Actions** 页，会看到 `Release` 工作流在跑。工作流会显式执行 `--publish always`，将安装包上传到对应 Release。
 4. 跑完后到 **Releases** 页，对应 tag 下会有安装包和 `latest.yml`，由 electron-builder 自动上传。
 
 之后用户打开已安装的应用，就会按你配置的 `publish` 从该 Release 检查更新。
