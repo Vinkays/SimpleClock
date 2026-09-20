@@ -42,7 +42,7 @@ Section "Uninstall"
   !insertmacro removeAutoLaunch
   
   ; 可选：删除其他相关注册表项
-  DeleteRegKey HKCU "Software\VinkayProjects\SimpleClock"
+  ;DeleteRegKey HKCU "Software\VinkayProjects\SimpleClock"
   
   ; 不删除 $APPDATA\SimpleClock / $LOCALAPPDATA\SimpleClock，避免更新时清空窗口位置、置顶等配置（app-config.json）
   ; 用户若需彻底清除数据，可手动删除 %AppData%\SimpleClock 文件夹

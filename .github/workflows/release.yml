@@ -39,26 +39,6 @@ jobs:
       - name: Build renderer
         run: npm run build:render
 
-      - name: Show output dir (non-windows)
-        if: runner.os != 'Windows'
-        run: |
-          echo "Files in output:"
-          ls -la output || true
-        shell: bash
-
-      - name: Show output dir (windows)
-        if: runner.os == 'Windows'
-        run: |
-          Write-Host 'Files in output:'
-          if (Test-Path output) { Get-ChildItem output -Recurse } else { Write-Host 'no output dir' }
-        shell: pwsh
-
-      - name: Upload output artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: output-${{ matrix.platform }}
-          path: output
-
       # 每个平台分别打包自己的安装包并上传到当前 tag 的 Release
       - name: Build and publish ${{ matrix.platform }} artifacts
         run: npm run dist -- --${{ matrix.platform }} --publish always
