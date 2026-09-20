@@ -1,7 +1,7 @@
 # SimpleClock
 
 ## 介绍
-一个简易时钟，使用vue3 + electron实现。简单，能调整大小，可拖动。
+一个简易时钟，使用vue3 + electron实现。简单，能调整大小，设置字体、背景颜色，可拖动。
 ![screenshot](./src/assets/screenshot.png)
 ![screenshot](./src/assets/s-screenshot.png)
 

@@ -8,7 +8,18 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+          - os: ubuntu-latest
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write   # 创建 Release、上传安装包和 latest.yml 必需
 
@@ -28,8 +39,8 @@ jobs:
       - name: Build renderer
         run: npm run build:render
 
-      # electron-builder 会根据 electron-builder.config.js 的 publish 配置，把 output 里的 exe + latest.yml 上传到当前 tag 的 Release
-      - name: Build and publish to GitHub Releases
-        run: npm run dist -- --publish always
+      # 每个平台分别打包自己的安装包并上传到当前 tag 的 Release
+      - name: Build and publish ${{ matrix.platform }} artifacts
+        run: npm run dist -- --${{ matrix.platform }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
