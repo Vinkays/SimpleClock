@@ -42,7 +42,16 @@ function updateTime() {
 }
 
 updateTime();
-const timer = setInterval(updateTime, 1000);
+// 对齐到下一个整秒再开始周期更新：避免 setInterval 相位随机导致的秒数滞后
+// （tick 落在秒的后半段时会显示"过时的秒"，视觉上比真实时钟慢最多约 1 秒）
+let timer: number | null = null
+let alignTimer: number | null = null
+const now = new Date()
+const delayToNextSecond = 1000 - now.getMilliseconds()
+alignTimer = window.setTimeout(() => {
+  updateTime()
+  timer = window.setInterval(updateTime, 1000)
+}, delayToNextSecond)
 
 let isTracking = false
 let startX = 0
@@ -145,7 +154,8 @@ function storeFinalWinPositionAndSize() {
 }
 // 组件卸载时清理
 onUnmounted(() => {
-  clearInterval(timer)
+  if (timer !== null) clearInterval(timer)
+  if (alignTimer !== null) clearTimeout(alignTimer)
   stopDragging()
   window.removeEventListener('resize', onWindowResize)
 });

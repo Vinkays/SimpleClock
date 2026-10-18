@@ -81,16 +81,13 @@ function createWindow (name, size, position) {
     frame: false, // 隐藏窗口边框
     titleBarStyle: 'hidden', // 隐藏标题栏但保留窗口控制按钮
     autoHideMenuBar: false, // 隐藏菜单栏
-    // resizable: false, // 禁用窗口缩放，避免拖动时误触调整大小
-    // minimizable: false,
-    // maximizable: false,
     movable: true,
     ...pos?{...pos}:{},
     webPreferences: {
       zoomFactor: 1.0, // 设置默认缩放级别
-      nodeIntegration: false, // 关闭 Node.js 集成
+      nodeIntegration: false, // 关闭渲染进程 Node.js 集成
       contextIsolation: true, // 重要：开启上下文隔离
-      enableRemoteModule: false, // 重要：关闭 remote 模块
+      enableRemoteModule: false, // 重要：关闭渲染进程 remote 模块
       webSecurity: true, // 重要：开启 web 安全
       allowRunningInsecureContent: false, // 禁止不安全内容
       devTools: true,
@@ -117,28 +114,6 @@ function createMainWindow () {
   const isAlwaysOnTop = !!store.get('isAlwaysOnTop'); 
   const win = createWindow('main', oldSize, oldPosition)
   win.setAlwaysOnTop(isAlwaysOnTop, isAlwaysOnTop?'screen-saver':'floating') // 设置窗口置顶
-  
-  // Support custom right-click menu even when the window area is draggable
-  // win.webContents.on('context-menu', (event, params) => {
-  //   event.preventDefault()
-  //   const currentRightMenu = mainObj.pagesWins?.rightMenus
-  //   if (currentRightMenu) {
-  //     currentRightMenu.close()
-  //     delete mainObj.pagesWins.rightMenus
-  //   }
-  //   const bounds = win.getBounds()
-  //   const menuPos = {
-  //     x: bounds.x + params.x,
-  //     y: bounds.y + params.y,
-  //   }
-  //   const menuWin = createWindow('rightMenus', [220, 220], menuPos)
-  //   menuWin.on('closed', () => {
-  //     delete mainObj.pagesWins.rightMenus
-  //   })
-  //   mainObj.pagesWins.rightMenus = menuWin
-  // })
-
-  // Protect against unexpected resize only during manual move
   win.on('resize', () => {
     const size = win.getSize()
     if (mainObj.isMoving) {
@@ -162,7 +137,7 @@ function createMainWindow () {
 }
 
 mainObj.createWindow = createWindow
-initWinIpcMain(mainObj) // 初始化 IPC（含 add-new-window / remove-window）
+initWinIpcMain(mainObj) // 初始化 IPC
 
 app.whenReady().then(() => {
   createMainWindow()
